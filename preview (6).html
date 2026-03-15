@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>راعي الشاي - ابدًا العب</title>
+<style>
+body{font-family:Arial;text-align:center;padding:20px;background:#111;color:white;}
+h1{color:#f5c542;}
+input,button{padding:10px;margin:5px;border-radius:6px;border:none;font-size:16px;}
+input{width:220px;}
+button{background:#f5c542;color:black;cursor:pointer;}
+#game{display:none;margin-top:20px;}
+#scratch{position:relative;margin:auto;width:300px;height:150px;background:#f5c542;border-radius:10px;}
+canvas{position:absolute;top:0;left:0;}
+#result{margin-top:18px;font-size:20px;}
+</style>
+</head>
+<body>
+
+<h1>مطعم راعي الشاي</h1>
+<p>جرب حظك وانت وحظك 🌚</p>
+
+<div id="login">
+<input id="order" placeholder="رقم الأوردر"><br>
+<input id="phone" placeholder="رقم الموبايل"><br>
+<button onclick="startGame()">ابدأ اللعب</button>
+</div>
+
+<div id="game">
+<div id="scratch">
+<canvas id="canvas"></canvas>
+</div>
+<div id="result"></div>
+</div>
+
+<script>
+let prizes=[
+{t:"مشروب مجاني",p:30},
+{t:"خصم 50%",p:35},
+{t:"خصم 25%",p:35}
+];
+let sheetURL="https://script.google.com/macros/s/AKfycbwXdHkzsJH2r0-sgFa9uJ7iLKyyPtegr2GT1WMgacA-qQUwCeGwP9ruXDTWpaUg767g4w/exec";
+
+function pickPrize(){
+let r=Math.random()*100,sum=0;
+for(let i of prizes){sum+=i.p;if(r<=sum) return i.t;}
+}
+
+function startGame(){
+let order=document.getElementById("order").value;
+let phone=document.getElementById("phone").value;
+if(!order||!phone){alert("ادخل رقم الأوردر والموبايل");return;}
+if(localStorage.getItem(phone)){alert("لقد لعبت من قبل");return;}
+localStorage.setItem(phone,true);
+document.getElementById("login").style.display="none";
+document.getElementById("game").style.display="block";
+let prize=pickPrize();
+initScratch(prize);
+sendToSheet(order,phone,prize);
+}
+
+function initScratch(prize){
+let canvas=document.getElementById("canvas"),ctx=canvas.getContext("2d");
+canvas.width=300;canvas.height=150;
+ctx.fillStyle="#C0C0C0";ctx.fillRect(0,0,300,150);
+canvas.addEventListener("mousemove",scratch);
+canvas.addEventListener("touchmove",scratch);
+function scratch(e){
+let rect=canvas.getBoundingClientRect();
+let x=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+let y=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+ctx.globalCompositeOperation="destination-out";
+ctx.beginPath();ctx.arc(x,y,15,0,Math.PI*2);ctx.fill();
+document.getElementById("result").innerText="أظهر النتيجة للكاشير ( "+prize+" )";
+}}
+function sendToSheet(order,phone,prize){
+fetch(sheetURL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({order,phone,prize})});
+}
+</script>
+
+</body>
+</html>
